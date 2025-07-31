@@ -12,6 +12,6 @@ def index_documents(docs, namespace):
     vector_store.add_documents(splits, namespace=namespace)
     return vector_store
 
-def retrieve_relevant_clauses(vector_store, question, namespace, top_k=8):
+def retrieve_relevant_clauses(vector_store, question, namespace, top_k=5):
     results = vector_store.similarity_search(question, k=top_k, namespace=namespace)
     return "\n\n".join([doc.page_content for doc in results])
