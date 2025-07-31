@@ -6,7 +6,7 @@ from utils.document_loader import load_documents
 from utils.clause_matcher import index_documents, retrieve_relevant_clauses
 from dotenv import load_dotenv
 from datetime import datetime
-
+import asyncio
 load_dotenv()
 app = FastAPI()
 
@@ -63,12 +63,14 @@ async def run_query(
     docs = load_documents(req.documents)
     vector_store = index_documents(docs, namespace)
 
-    # ❓ Process each question sequentially
-    answers = []
-    for question in req.questions:
-        relevant_clauses = retrieve_relevant_clauses(vector_store, question, namespace)
+    # Process each question sequentially
+    async def process_question(question):
+        relevant_clauses = await retrieve_relevant_clauses(vector_store, question, namespace, top_k=8)
         context = "\n".join(relevant_clauses) if isinstance(relevant_clauses, list) else str(relevant_clauses)
-        answer = await gemini_answer(context, question)
-        answers.append(answer)
+        return await gemini_answer(context, question)
+
+    answers = await asyncio.gather(
+        *[process_question(q) for q in req.questions]
+    )
 
     return {"answers": answers}

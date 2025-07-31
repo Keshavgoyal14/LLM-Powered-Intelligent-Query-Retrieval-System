@@ -14,7 +14,8 @@ async def gemini_answer(context, question):
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         temperature=0.0,
-        max_output_tokens=1024,
+        top_p=0.95,
+        max_output_tokens=300,
         google_api_key=api_key
     )
     prompt = (

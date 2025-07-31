@@ -1,17 +1,89 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from utils.embedding import get_vectorStore
+from functools import lru_cache
+import asyncio
+
+@lru_cache(maxsize=1)
+def get_cached_vectorstore():
+    return get_vectorStore()
 
 def index_documents(docs, namespace):
+    # Optimize chunk size and overlap for better context
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=100
+        chunk_size=1500,      # Increased for better context
+        chunk_overlap=300,     # Increased overlap
+        length_function=len,
+        separators=["\n\n", "\n", ". ", ", ", " "]  # More granular splitting
     )
     splits = text_splitter.split_documents(docs)
     
-    vector_store = get_vectorStore()
-    vector_store.add_documents(splits, namespace=namespace)
+    vector_store = get_cached_vectorstore()
+    
+    # Enhanced document processing
+    for i, split in enumerate(splits):
+        # Add previous and next chunk context
+        if i > 0:
+            split.metadata["prev_content"] = splits[i-1].page_content
+        if i < len(splits) - 1:
+            split.metadata["next_content"] = splits[i+1].page_content
+    
+    # Batch processing with progress tracking
+    batch_size = 50
+    for i in range(0, len(splits), batch_size):
+        batch = splits[i:i + batch_size]
+        vector_store.add_documents(batch, namespace=namespace)
+    
     return vector_store
 
-def retrieve_relevant_clauses(vector_store, question, namespace, top_k=5):
-    results = vector_store.similarity_search(question, k=top_k, namespace=namespace)
-    return "\n\n".join([doc.page_content for doc in results])
+async def retrieve_relevant_clauses(vector_store, question, namespace, top_k=5):
+    # Enhanced search with multiple strategies
+    try:
+        # Primary search with scores
+        primary_results = await asyncio.to_thread(
+            vector_store.similarity_search_with_score,
+            question,
+            k=top_k * 2,  # Get more candidates
+            namespace=namespace
+        )
+        
+        clean_results = []
+        seen_content = set()
+        
+        for doc, score in primary_results:
+            content = doc.page_content.strip()
+            
+            # More lenient score threshold
+            if score < 0.8 and content and content not in seen_content:
+                # Build context window
+                context_parts = []
+                
+                if hasattr(doc.metadata, "prev_content"):
+                    context_parts.append(doc.metadata["prev_content"])
+                
+                context_parts.append(content)
+                
+                if hasattr(doc.metadata, "next_content"):
+                    context_parts.append(doc.metadata["next_content"])
+                
+                full_context = "\n".join(context_parts)
+                
+                if len(full_context.strip()) > 0:
+                    clean_results.append(full_context)
+                    seen_content.add(content)
+        
+        # If no good results, try basic search
+        if not clean_results:
+            basic_results = await asyncio.to_thread(
+                vector_store.similarity_search,
+                question,
+                k=top_k,
+                namespace=namespace
+            )
+            clean_results = [doc.page_content.strip() for doc in basic_results if doc.page_content.strip()]
+        
+        # Ensure we have some results
+        return clean_results[:top_k] if clean_results else ["No relevant information found in the policy document."]
+    
+    except Exception as e:
+        print(f"Error in retrieve_relevant_clauses: {str(e)}")
+        return ["Error retrieving policy information."]
