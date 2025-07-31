@@ -16,7 +16,7 @@ def index_documents(docs, namespace):
         separators=["\n\n", "\n", ". ", ", ", " "]  # More granular splitting
     )
     splits = text_splitter.split_documents(docs)
-    
+    print(f"🔍 Number of chunks being indexed: {len(splits)}")
     vector_store = get_cached_vectorstore()
     
     # Enhanced document processing
