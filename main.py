@@ -41,7 +41,10 @@ def custom_openapi():
     return app.openapi_schema
 
 app.openapi = custom_openapi
-
+# ✅ Add a simple GET route for warm ping / health check
+@app.get("/")
+def read_root():
+    return {"message": "Server is alive!"}
 # ✅ Endpoint with Bearer token check
 @app.post("/api/v1/hackrx/run", response_model=QueryResponse)
 async def run_query(
