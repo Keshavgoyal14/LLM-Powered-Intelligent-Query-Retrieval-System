@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: finbot-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --timeout 300
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+    scaling:
+      minInstances: 1
+      maxInstances: 3
