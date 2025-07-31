@@ -6,10 +6,8 @@ from utils.document_loader import load_documents
 from utils.clause_matcher import index_documents, retrieve_relevant_clauses
 from dotenv import load_dotenv
 from datetime import datetime
-import asyncio
 
 load_dotenv()
-
 app = FastAPI()
 
 TEAM_TOKEN = "76383ca924349758781a28503e0628a023bfaff20608d8fbb2d03f17ae19ef0e"
@@ -50,26 +48,27 @@ async def run_query(
     req: QueryRequest,
     authorization: str = Header(None)
 ):
-    # Authorization check
+    # 🔒 Authorization
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing Authorization header")
     parts = authorization.strip().split(" ")
-    print(f"Received token parts: {parts}")
     if len(parts) != 2 or parts[0] != "Bearer":
         raise HTTPException(status_code=401, detail="Invalid Authorization format")
     token = parts[1]
     if token != TEAM_TOKEN:
         raise HTTPException(status_code=403, detail="Invalid team token")
 
+    # 🧠 Vector Indexing
     namespace = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     docs = load_documents(req.documents)
     vector_store = index_documents(docs, namespace)
 
-    answers_tasks = []
+    # ❓ Process each question sequentially
+    answers = []
     for question in req.questions:
         relevant_clauses = retrieve_relevant_clauses(vector_store, question, namespace)
-        context = relevant_clauses
-        answers_tasks.append(gemini_answer(context, question))
+        context = "\n".join(relevant_clauses) if isinstance(relevant_clauses, list) else str(relevant_clauses)
+        answer = await gemini_answer(context, question)
+        answers.append(answer)
 
-    answers = await asyncio.gather(*answers_tasks)
     return {"answers": answers}
