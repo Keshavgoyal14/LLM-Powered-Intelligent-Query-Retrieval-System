@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.openapi.utils import get_openapi
 from schemas import QueryResponse, QueryRequest
 from utils.llm_gemini import gemini_answer
