@@ -7,3 +7,8 @@ pymongo
 pinecone-client
 google-generativeai
 python-dotenv
+langchain
+langchain-community
+langchain-core
+langchain-google-genai
+langchain-pinecone
