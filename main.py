@@ -39,6 +39,7 @@ document_cache = {}
 def get_document_hash(document_url: str) -> str:
     return hashlib.md5(document_url.encode()).hexdigest()
 
+@lru_cache(maxsize=32)
 def get_cached_vector_store(doc_hash: str):
     return document_cache.get(doc_hash)
 
