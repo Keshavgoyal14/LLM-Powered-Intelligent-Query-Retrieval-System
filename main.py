@@ -11,6 +11,7 @@ from datetime import datetime
 import asyncio
 from functools import lru_cache
 import hashlib
+import time  # ✅ ADDED
 
 load_dotenv()
 
@@ -101,17 +102,26 @@ async def run_query(
         vector_store = get_cached_vector_store(doc_hash)
         
         if not vector_store:
-            # Process document if not in cache
+            print("📥 Loading documents...")  # ✅ LOGGING
             docs = load_documents(req.documents)
+
+            print("📚 Indexing documents...")  # ✅ LOGGING
             vector_store = index_documents(docs, doc_hash)
-            document_cache[doc_hash] = vector_store
+
+            print("✅ Indexing complete")  # ✅ LOGGING
+
+            # Optional wait to ensure persistence
+            time.sleep(1)  # 🔧 TEMP FIX: allow vectorstore to persist uploads
+
+            document_cache[doc_hash] = vector_store  # 🔧 Only set cache AFTER indexing
 
         # Process questions in batches
         batch_size = 3
         answers = []
-        
+
         async def process_question(question):
             try:
+                print(f"🔍 Retrieving for: {question}")  # ✅ LOGGING
                 relevant_clauses = await retrieve_relevant_clauses(
                     vector_store, 
                     question, 
