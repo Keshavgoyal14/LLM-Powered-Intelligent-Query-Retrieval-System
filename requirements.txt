@@ -14,4 +14,8 @@ langchain-google-genai
 langchain-pinecone
 gunicorn
 uvloop
+typing-extensions
+aiofiles
+tenacity
+filelock
 httptools
