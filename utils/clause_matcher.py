@@ -39,6 +39,7 @@ async def retrieve_relevant_clauses(vector_store, question, namespace, top_k=5):
     # Enhanced search with multiple strategies
     try:
         # Primary search with scores
+        print(f"🔍 Searching for relevant clauses for question: {question}")
         primary_results = await asyncio.to_thread(
             vector_store.similarity_search_with_score,
             question,

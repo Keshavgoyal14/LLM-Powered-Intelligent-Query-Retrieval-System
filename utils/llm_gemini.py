@@ -49,7 +49,7 @@ def detect_domain(context: str, question: str) -> Tuple[str, str]:
 def clean_response(text: str) -> str:
     # Remove markdown bold/italic and excessive newlines
     text = re.sub(r"\*\*|\*", "", text)  # Remove * and **
-    text = re.sub(r"\n{2,}", " ", text)  # Replace multiple newlines with one
+    text = re.sub(r"\n{2,}", "\n", text)  # Replace multiple newlines with one
     text = text.strip()
     text = text.replace("\n", " ")
     return text
