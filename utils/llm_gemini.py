@@ -49,7 +49,7 @@ def detect_domain(context: str, question: str) -> Tuple[str, str]:
 def clean_response(text: str) -> str:
     # Remove markdown bold/italic and excessive newlines
     text = re.sub(r"\*\*|\*", "", text)  # Remove * and **
-    text = re.sub(r"\n{2,}", "\n", text)  # Replace multiple newlines with one
+    text = re.sub(r"\n{2,}", " ", text)  # Replace multiple newlines with one
     text = text.strip()
     text = text.replace("\n", " ")
     return text
@@ -69,11 +69,24 @@ async def gemini_answer(context: str, question: str):
     )
 
     domain_expertise = {
-        "insurance": "insurance policies, coverage terms, and claims processing",
-        "legal": "regulations, compliance requirements, and legal frameworks",
-        "hr": "HR policies, employee relations, and workplace regulations",
-        "contracts": "contractual terms, obligations, and agreement analysis"
+        "insurance": ("insurance policies, coverage terms, claims processing, "
+                     "underwriting standards, policy exclusions, waiting periods, "
+                     "regulatory compliance, risk assessment, benefit calculations, "
+                     "premium structures, and IRDAI guidelines"),
+        "legal": ("regulations, compliance requirements, legal frameworks, "
+                 "statutory interpretations, jurisdictional requirements, "
+                 "legal precedents, liability assessments, regulatory filings, "
+                 "enforcement procedures, and compliance auditing"),
+        "hr": ("HR policies, employee relations, workplace regulations, "
+               "compensation structures, benefit administration, leave management, "
+               "performance evaluation, workplace safety, talent acquisition, "
+               "training programs, and labor law compliance"),
+        "contracts": ("contractual terms, obligations, agreement structures, "
+                     "liability clauses, performance conditions, breach remedies, "
+                     "termination provisions, indemnification clauses, "
+                     "warranties, and dispute resolution mechanisms")
     }
+
 
     prompt = (
         f"You are a {role} with extensive expertise in {domain_expertise[domain]}. "
