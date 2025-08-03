@@ -133,6 +133,7 @@ async def gemini_answer(context: str, question: str):
 
     try:
         result = await llm.ainvoke(prompt)
+        print(f"Gemini response: {result.content}")
         return clean_response(result.content)
     except Exception as e:
         return f"Error generating response: {str(e)}"
