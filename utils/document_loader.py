@@ -5,6 +5,7 @@ import requests
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
 
 def load_documents(url: str):
+    print(f"Loading document from URL: {url}")
     response = requests.get(url)
     parsed_url = urlparse(url)
     path = parsed_url.path  # Only the path, no query string

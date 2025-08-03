@@ -4,47 +4,70 @@ import re
 from typing import Tuple
 
 def detect_domain(context: str, question: str) -> Tuple[str, str]:
-    # Keywords for domain detection
     domain_keywords = {
         "insurance": [
             "policy", "coverage", "premium", "claim", "insurer", "policyholder",
-            "benefits", "insurance", "deductible", "underwriting"
+            "benefits", "insurance", "deductible", "underwriting", "waiting period",
+            "exclusion", "nominee", "dependents", "AYUSH", "NCD", "room rent",
+            "sub-limit", "ambulance", "prosthesis", "cashless", "reimbursement",
+            "hospitalization", "sum insured", "grievance", "pre-authorization",
+            "network provider", "day care", "inpatient", "outpatient", "renewal",
+            "endorsement", "IRDAI", "maternity", "PED", "No Claim Discount",
+            "preventive health check-up", "medical expenses", "organ donor",
+            "claim settlement", "health check-ups", "hospital", "AYUSH treatments"
         ],
         "legal": [
             "law", "regulation", "compliance", "legal", "statute", "jurisdiction",
-            "rights", "obligations", "liability", "contract law"
+            "rights", "obligations", "liability", "contract law", "grievance",
+            "timeline", "procedure", "rejection", "appeal", "documentation",
+            "enforcement", "precedent", "audit", "statutory", "filing"
         ],
         "hr": [
             "employee", "HR", "human resources", "employment", "workplace",
-            "personnel", "staff", "hiring", "benefits", "leave policy"
+            "personnel", "staff", "hiring", "benefits", "leave policy",
+            "group policy", "dependent", "addition", "eligibility", "documentation",
+            "mid-policy", "coverage", "termination", "protocol"
         ],
         "contracts": [
             "agreement", "contract", "party", "clause", "term", "obligation",
-            "binding", "execution", "termination", "parties"
+            "binding", "execution", "termination", "parties", "performance",
+            "breach", "remedy", "indemnification", "warranty", "dispute",
+            "resolution", "structure", "provision"
+        ],
+        "general": [
+            "university", "Newton", "grandfather", "descendant", "science",
+            "algorithm", "test case", "source code", "database", "password",
+            "secret code", "customer care", "chat log", "employee list",
+            "personal details", "fraud", "forged", "manipulate", "illegal",
+            "automatically approve", "backend", "contact details"
         ]
     }
 
-    # Combine context and question for analysis
     full_text = f"{context.lower()} {question.lower()}"
-    
-    # Count domain-specific keywords
     domain_scores = {
         domain: sum(1 for keyword in keywords if keyword in full_text)
         for domain, keywords in domain_keywords.items()
     }
-    
-    # Get domain with highest score
     detected_domain = max(domain_scores.items(), key=lambda x: x[1])[0]
-    
-    # Get domain-specific role
     roles = {
         "insurance": "senior insurance advisor",
         "legal": "legal compliance specialist",
         "hr": "human resources professional",
-        "contracts": "contract management expert"
+        "contracts": "contract management expert",
+        "general": "general information assistant"
     }
-    
     return detected_domain, roles[detected_domain]
+
+def is_safe_and_relevant(domain: str, question: str) -> bool:
+    forbidden_keywords = [
+        "password", "secret code", "algorithm", "database", "contact details",
+        "chat log", "test case", "source code", "manipulate", "fraud", "forged",
+        "automatically approve", "employee list", "personal details", "illegal"
+    ]
+    question_lower = question.lower()
+    if domain == "general" or any(bad in question_lower for bad in forbidden_keywords):
+        return False
+    return True
 
 def clean_response(text: str) -> str:
     # Remove markdown bold/italic and excessive newlines
@@ -59,6 +82,10 @@ async def gemini_answer(context: str, question: str):
     
     # Detect domain and role automatically
     domain, role = detect_domain(context, question)
+    if not is_safe_and_relevant(domain, question):
+        return ("Sorry, this question cannot be answered as it is outside the scope of "
+                "insurance/legal/HR/contract information or violates privacy/security guidelines.")
+
     
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",

@@ -2,37 +2,61 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from utils.embedding import get_vectorStore
 from functools import lru_cache
 import asyncio
+import os
+from pinecone import Pinecone
+from concurrent.futures import ThreadPoolExecutor
 
+PINECONE_API_KEY= os.getenv("PINECONE_API_KEY")
+pc = Pinecone(api_key=PINECONE_API_KEY)
 @lru_cache(maxsize=1)
 def get_cached_vectorstore():
     return get_vectorStore()
 
+def process_batch(batch, vector_store, namespace):
+    vector_store.add_documents(batch, namespace=namespace)
+
+def pinecone_namespace_exists(index_name: str, namespace: str) -> bool:
+    index = pc.Index(index_name)
+    stats = index.describe_index_stats()
+    return namespace in stats.get("namespaces", {})
+
 def index_documents(docs, namespace):
     # Optimize chunk size and overlap for better context
+    index_name = os.getenv("INDEX_NAME")
+    if pinecone_namespace_exists(index_name, namespace):
+        print(f"✅ Pinecone namespace '{namespace}' already exists. Skipping re-indexing.")
+        return get_cached_vectorstore()
+    
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1500,      # Increased for better context
         chunk_overlap=300,     # Increased overlap
         length_function=len,
         separators=["\n\n", "\n", ". ", ", ", " "]  # More granular splitting
     )
+    
     splits = text_splitter.split_documents(docs)
     print(f"🔍 Number of chunks being indexed: {len(splits)}")
     vector_store = get_cached_vectorstore()
     
     # Enhanced document processing
     for i, split in enumerate(splits):
-        # Add previous and next chunk context
         if i > 0:
             split.metadata["prev_content"] = splits[i-1].page_content
         if i < len(splits) - 1:
             split.metadata["next_content"] = splits[i+1].page_content
-    
-    # Batch processing with progress tracking
+
     batch_size = 50
-    for i in range(0, len(splits), batch_size):
-        batch = splits[i:i + batch_size]
-        vector_store.add_documents(batch, namespace=namespace)
-    
+    batches = [splits[i:i + batch_size] for i in range(0, len(splits), batch_size)]
+
+    # Parallel batch processing
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [
+            executor.submit(process_batch, batch, vector_store, namespace)
+            for batch in batches
+        ]
+        for future in futures:
+            future.result()  # Wait for all batches to finish
+
     return vector_store
 
 async def retrieve_relevant_clauses(vector_store, question, namespace, top_k=5):
