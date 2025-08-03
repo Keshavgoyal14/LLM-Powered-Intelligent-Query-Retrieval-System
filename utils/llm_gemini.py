@@ -60,10 +60,11 @@ def detect_domain(context: str, question: str) -> Tuple[str, str]:
 
 def is_safe_and_relevant(domain: str, question: str) -> bool:
     forbidden_keywords = [
-        "password", "secret code", "algorithm", "database", "contact details",
-        "chat log", "test case", "source code", "manipulate", "fraud", "forged",
-        "automatically approve", "employee list", "personal details", "illegal"
-    ]
+    "password", "secret code", "algorithm", "database", "contact details",
+    "chat log", "test case", "source code", "manipulate", "fraud", "forged",
+    "automatically approve", "employee list", "personal details", "illegal",
+    "java", "python", "compile", "debug", "code", "script", "program", "backend"
+]
     question_lower = question.lower()
     if domain == "general" or any(bad in question_lower for bad in forbidden_keywords):
         return False
