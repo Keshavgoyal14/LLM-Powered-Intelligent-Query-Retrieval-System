@@ -60,11 +60,9 @@ def detect_domain(context: str, question: str) -> Tuple[str, str]:
 
 def is_safe_and_relevant(domain: str, question: str) -> bool:
     forbidden_keywords = [
-    "password", "secret code", "algorithm", "database", "contact details",
-    "chat log", "test case", "source code", "manipulate", "fraud", "forged",
-    "automatically approve", "employee list", "personal details", "illegal",
-    "java", "python", "compile", "debug", "code", "script", "program", "backend"
-]
+        "password", "secret code", "database", "contact details",
+        "chat log", "personal details", "illegal", "manipulate", "forged", "fraud"
+    ]
     question_lower = question.lower()
     if domain == "general" or any(bad in question_lower for bad in forbidden_keywords):
         return False
@@ -73,7 +71,7 @@ def is_safe_and_relevant(domain: str, question: str) -> bool:
 def clean_response(text: str) -> str:
     # Remove markdown bold/italic and excessive newlines
     text = re.sub(r"\*\*|\*", "", text)  # Remove * and **
-    text = re.sub(r"\n{2,}", "\n", text)  # Replace multiple newlines with one
+    text = re.sub(r"\n{2,}", ".", text)  # Replace multiple newlines with one
     text = text.strip()
     text = text.replace("\n", " ")
     return text
@@ -87,9 +85,8 @@ async def gemini_answer(context: str, question: str):
         return ("Sorry, this question cannot be answered as it is outside the scope of "
                 "insurance/legal/HR/contract information or violates privacy/security guidelines.")
 
-    
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
+        model="gemini-1.5-pro", 
         temperature=0.0,
         top_p=0.95,
         max_output_tokens=300,
@@ -112,25 +109,37 @@ async def gemini_answer(context: str, question: str):
         "contracts": ("contractual terms, obligations, agreement structures, "
                      "liability clauses, performance conditions, breach remedies, "
                      "termination provisions, indemnification clauses, "
-                     "warranties, and dispute resolution mechanisms")
+                     "warranties, and dispute resolution mechanisms"),
+        "general": ("general knowledge, science, history, and public information")
     }
 
-
-    prompt = (
-        f"You are a {role} with extensive expertise in {domain_expertise[domain]}. "
-        "Analyze the provided content carefully and professionally.\n\n"
-        "REQUIREMENTS:\n"
-         "1. Be concise,clear and direct\n"
-        "2. Use ONLY information from the provided context\n"
-        "3. Include specific details (dates, numbers, terms) when present\n"
-        "4. If information isn't explicit, provide logical domain-specific insights\n"
-        "5. Use clear, accessible language\n"
-        "6. Format response professionally\n"
-        "7. Highlight any regulatory or compliance aspects\n\n"
-        f"Context:\n{context}\n\n"
-        f"Question: {question}\n\n"
-        "Professional Response:"
-    )
+    # Choose prompt based on domain
+    if domain == "general":
+        prompt = (
+            "You are a knowledgeable assistant. "
+            "Answer the following question using only the provided context . "
+            "If the context does not contain the answer, use your general knowledge. "
+            "Be clear, concise, and factual. If the question is about programming, provide a code example if possible.\n\n"
+            f"Context:\n{context}\n\n"
+            f"Question: {question}\n\n"
+            "Answer:"
+        )
+    else:
+        prompt = (
+            f"You are a {role} with extensive expertise in {domain_expertise[domain]}. "
+            "Analyze the provided content carefully and professionally.\n\n"
+            "REQUIREMENTS:\n"
+            "1. Be concise, clear and direct\n"
+            "2. Use ONLY information from the provided context\n"
+            "3. Include specific details (dates, numbers, terms) when present\n"
+            "4. If information isn't explicit, provide logical domain-specific insights\n"
+            "5. Use clear, accessible language\n"
+            "6. Format response professionally\n"
+            "7. Highlight any regulatory or compliance aspects\n\n"
+            f"Context:\n{context}\n\n"
+            f"Question: {question}\n\n"
+            "Professional Response:"
+        )
 
     try:
         result = await llm.ainvoke(prompt)
