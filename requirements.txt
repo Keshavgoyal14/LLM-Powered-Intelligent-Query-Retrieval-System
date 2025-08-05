@@ -18,4 +18,5 @@ typing-extensions
 aiofiles
 tenacity
 filelock
+docx2txt
 httptools

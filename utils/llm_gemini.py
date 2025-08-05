@@ -101,7 +101,7 @@ async def gemini_answer(context: str, question: str):
 
     # Detect domain and role automatically
     domain, role = detect_domain(context, question)
-    
+
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",  
         temperature=0.0,
@@ -147,7 +147,8 @@ async def gemini_answer(context: str, question: str):
             "Analyze the provided content carefully and professionally.\n\n"
             "REQUIREMENTS:\n"
             "1. Be concise, clear and direct\n"
-            "2. Use ONLY information from the provided context\n"
+            "2. Use ONLY information from the provided context if possible\n"
+            "If the context does not contain the answer, use your general knowledge to answer directly. \n"
             "3. Include specific details (dates, numbers, terms) when present\n"
             "4. If information isn't explicit, provide logical domain-specific insights\n"
             "5. Use clear, accessible language\n"
