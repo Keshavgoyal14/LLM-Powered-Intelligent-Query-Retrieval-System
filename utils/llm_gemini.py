@@ -2,6 +2,28 @@ import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 import re
 from typing import Tuple
+import requests
+
+def hf_moderate_text(text: str) -> bool:
+    HF_API_KEY = os.getenv("HF_API_KEY")
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    url = "https://router.huggingface.co/hf-inference/models/facebook/roberta-hate-speech-dynabench-r4-target"
+    payload = {"inputs": text}
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        if not response.content or response.status_code != 200:
+            print(f"HuggingFace moderation API error: {response.status_code} {response.content}")
+            return True
+        result = response.json()
+        if isinstance(result, list) and result and isinstance(result[0], list):
+            for label_dict in result[0]:
+                if label_dict.get('label', '').lower() == 'hate' and label_dict.get('score', 0) > 0.5:
+                    return False  # Block if hate score is high
+            return True  
+    except Exception as e:
+        print(f"HuggingFace moderation error: {e}")
+        return True
+    return True
 
 def detect_domain(context: str, question: str) -> Tuple[str, str]:
     domain_keywords = {
@@ -58,11 +80,6 @@ def detect_domain(context: str, question: str) -> Tuple[str, str]:
     }
     return detected_domain, roles[detected_domain]
 
-def is_safe_and_relevant(domain: str, question: str) -> bool:
-    forbidden_keywords = [
-        "password", "secret code", "database", "contact details",
-        "chat log", "personal details", "illegal", "manipulate", "forged", "fraud"
-    ]
     question_lower = question.lower()
     if domain == "general" or any(bad in question_lower for bad in forbidden_keywords):
         return False
@@ -78,13 +95,13 @@ def clean_response(text: str) -> str:
 
 async def gemini_answer(context: str, question: str):
     api_key = os.getenv("GEMINI_API_KEY")
-    
+    if not hf_moderate_text(question):
+        return ("Sorry, this question cannot be answered as it contains sensitive or inappropriate content.")
+
+
     # Detect domain and role automatically
     domain, role = detect_domain(context, question)
-    if not is_safe_and_relevant(domain, question):
-        return ("Sorry, this question cannot be answered as it is outside the scope of "
-                "insurance/legal/HR/contract information or violates privacy/security guidelines.")
-
+    
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",  
         temperature=0.0,
