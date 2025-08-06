@@ -16,7 +16,8 @@ gunicorn
 uvloop
 pdfminer.six<20240703
 easyocr
-torch
+torch==2.2.2+cpu
+-f https://download.pytorch.org/whl/torch_stable.html
 pdf2image
 unstructured_inference
 unstructured[excel]
