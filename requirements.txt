@@ -19,7 +19,7 @@ easyocr
 torch
 pdf2image
 unstructured_inference
-unstructured[all-docs]
+unstructured[excel]
 openpyxl
 python-pptx
 pillow
