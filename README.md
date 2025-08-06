@@ -7,11 +7,16 @@ Supports PDF, DOCX, TXT, PPTX (with OCR for embedded images), Excel, and image f
 
 ## Features
 
+- **Domain-Specific Q&A:** Optimized for the following domains:
+  - **Insurance:** Policies, claims, coverage, regulatory compliance, etc.
+  - **Legal:** Law, regulations, compliance, contracts, statutory requirements, etc.
+  - **HR:** Human resources, employee policies, workplace regulations, etc.
+  - **Contracts:** Contractual terms, obligations, agreement structures, etc.
 - **Document Ingestion:** Upload and process PDF, DOCX, TXT, PPTX, XLSX, PNG, JPG, JPEG files.
 - **Text Extraction:** Uses LangChain loaders for text-based files, EasyOCR for images, and custom OCR for images embedded in PPTX slides.
 - **.aspx Link Resolution:** Automatically resolves Office Online `.aspx` links to the real file.
 - **Vector Search:** Indexes documents for semantic and keyword-based retrieval.
-- **Question Answering:** Answers user queries using Gemini and retrieved document context.
+- **Question Answering:** Answers user queries using Gemini and retrieved document context, with domain-aware prompts.
 - **Content Moderation:** Uses Hugging Face moderation API to check for unsafe or inappropriate content in both user questions and document chunks before indexing or answering.
 - **Security:** Blocks broad or privacy-violating queries with customizable forbidden patterns.
 - **Production Ready:** Handles temp files safely and cleans up resources.
@@ -50,9 +55,13 @@ Create a `.env` file in your project root with the following variables:
 ```env
 # Hugging Face API key for content moderation
 HF_API_KEY=your_huggingface_api_key_here
+
+# (Optional) Other environment variables as needed for your project
+# Example: MongoDB connection string, Pinecone API key, Google API key, Gemini API key, etc.
 MONGODB_URI=your_mongodb_uri_here
 PINECONE_API_KEY=your_pinecone_api_key_here
 GOOGLE_API_KEY=your_google_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 - Replace the values with your actual keys and connection strings.
@@ -107,6 +116,7 @@ GOOGLE_API_KEY=your_google_api_key_here
 - All temp files are cleaned up after processing.
 - PPTX text extraction is limited to images embedded in slides (not text boxes or tables).
 - Hugging Face moderation requires a valid API key and internet access.
+- **Finbot API is optimized for insurance, legal, HR, and contracts domains.**
 
 ---
 
