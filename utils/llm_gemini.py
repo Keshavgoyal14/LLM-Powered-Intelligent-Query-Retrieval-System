@@ -4,6 +4,34 @@ import re
 from typing import Tuple
 import requests
 
+FORBIDDEN_PATTERNS = [
+    "all customer database",
+    "all personal details",
+    "all policyholder details",
+    "all chat log",
+    "all conversation scripts",
+    "all claim query scripts",
+    "all private information",
+    "all other policyholders",
+    "export database",
+    "download database",
+    "leak",
+    "dump",
+    "list all",
+    "every customer",
+    "every policyholder",
+    "entire database",
+    "full database",
+    "show all",
+    "provide all",
+    "share all",
+    "give me all",
+]
+
+def is_forbidden_question(question: str) -> bool:
+    q=question.lower()
+    return any(pattern in q for pattern in FORBIDDEN_PATTERNS)
+
 def hf_moderate_text(text: str) -> bool:
     HF_API_KEY = os.getenv("HF_API_KEY")
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
@@ -95,6 +123,8 @@ def clean_response(text: str) -> str:
 
 async def gemini_answer(context: str, question: str):
     api_key = os.getenv("GEMINI_API_KEY")
+    if is_forbidden_question(question):
+        return {"answers": ["Sorry, I can't assist with that."]}
     if not hf_moderate_text(question):
         return ("Sorry, this question cannot be answered as it contains sensitive or inappropriate content.")
 
@@ -142,22 +172,24 @@ async def gemini_answer(context: str, question: str):
             "Answer:"
         )
     else:
-        prompt = (
-            f"You are a {role} with extensive expertise in {domain_expertise[domain]}. "
-            "Analyze the provided content carefully and professionally.\n\n"
-            "REQUIREMENTS:\n"
-            "1. Be concise, clear and direct\n"
-            "2. Use ONLY information from the provided context if possible\n"
-            "If the context does not contain the answer, use your general knowledge to answer directly. \n"
-            "3. Include specific details (dates, numbers, terms) when present\n"
-            "4. If information isn't explicit, provide logical domain-specific insights\n"
-            "5. Use clear, accessible language\n"
-            "6. Format response professionally\n"
-            "7. Highlight any regulatory or compliance aspects\n\n"
-            f"Context:\n{context}\n\n"
-            f"Question: {question}\n\n"
-            "Professional Response:"
-        )
+       prompt = (
+    f"You are a {role} with extensive expertise in {domain_expertise[domain]}. "
+    "Analyze the provided content carefully and professionally.\n\n"
+    "REQUIREMENTS:\n"
+    "1. Be concise, clear, and direct.\n"
+    "2. Use ONLY information from the provided context if possible.\n"
+    "3. If the context contains calculations, verify their accuracy and flag incorrect results.\n"
+    "4. If the context contains fabricated, logically inconsistent, or misleading information, explicitly note it and avoid treating it as factual.\n"
+    "5. If the context does not contain the answer, use your general knowledge to answer directly.\n"
+    "6. Include specific details (dates, numbers, terms) when present.\n"
+    "7. If information isn't explicit, provide logical domain-specific insights.\n"
+    "8. Use clear, accessible language.\n"
+    "9. Format the response professionally.\n"
+    "10. Highlight any regulatory or compliance aspects, if applicable.\n\n"
+    f"Context:\n{context}\n\n"
+    f"Question: {question}\n\n"
+    "Professional Response:"
+)
 
     try:
         result = await llm.ainvoke(prompt)

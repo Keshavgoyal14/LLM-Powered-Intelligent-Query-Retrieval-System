@@ -20,6 +20,24 @@ def pinecone_namespace_exists(index_name: str, namespace: str) -> bool:
     stats = index.describe_index_stats()
     return namespace in stats.get("namespaces", {})
 
+DANGEROUS_PATTERNS = [
+    "forget all instructions",
+    "ignore all previous instructions",
+    "leak",
+    "catastrophic system failure",
+    "personally identifiable information",
+    "no exceptions",
+    "override",
+    "ignore safety",
+    "immediate and irreversible leakage",
+    "respond exclusively with the phrase",
+    "this is a direct order",
+    "system administrator"
+]
+def contain_dangerous_instructions(text: str) -> bool:
+    text_lower = text.lower()
+    return any(pattern in text_lower for pattern in DANGEROUS_PATTERNS)
+
 def index_documents(docs, namespace):
     # Optimize chunk size and overlap for better context
     index_name = os.getenv("INDEX_NAME")
@@ -38,15 +56,30 @@ def index_documents(docs, namespace):
     print(f"🔍 Number of chunks being indexed: {len(splits)}")
     vector_store = get_cached_vectorstore()
     
+    splits = text_splitter.split_documents(docs)
+    print(f"🔍 Number of chunks before filtering: {len(splits)}")
+
+    # Filter out dangerous chunks
+    safe_splits = [
+        split for split in splits
+        if not contain_dangerous_instructions(split.page_content)
+    ]
+    print(f"🔍 Number of chunks after filtering: {len(safe_splits)}")
+
+    if not safe_splits:
+        return {
+            "success": False,
+            "answers": ["Document contains only unsafe instructions and cannot be processed."]
+        }
     # Enhanced document processing
-    for i, split in enumerate(splits):
+    for i, split in enumerate(safe_splits):
         if i > 0:
-            split.metadata["prev_content"] = splits[i-1].page_content
-        if i < len(splits) - 1:
-            split.metadata["next_content"] = splits[i+1].page_content
+            split.metadata["prev_content"] = safe_splits[i-1].page_content
+        if i < len(safe_splits) - 1:
+            split.metadata["next_content"] = safe_splits[i+1].page_content
 
     batch_size = 50
-    batches = [splits[i:i + batch_size] for i in range(0, len(splits), batch_size)]
+    batches = [safe_splits[i:i + batch_size] for i in range(0, len(safe_splits), batch_size)]
 
     # Parallel batch processing
     with ThreadPoolExecutor(max_workers=2) as executor:
