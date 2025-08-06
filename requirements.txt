@@ -15,9 +15,6 @@ langchain-pinecone
 gunicorn
 uvloop
 pdfminer.six<20240703
-pillow-heif
-pytesseract
-pi_heif
 easyocr
 torch
 pdf2image
