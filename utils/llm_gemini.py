@@ -133,7 +133,7 @@ async def gemini_answer(context: str, question: str):
     domain, role = detect_domain(context, question)
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",  
+        model="gemini-1.5-pro",  
         temperature=0.0,
         top_p=0.95,
         max_output_tokens=300,
