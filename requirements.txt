@@ -1,44 +1,36 @@
-# API & Server
 fastapi
 uvicorn
-gunicorn
-uvloop
-httptools
-aiofiles
-
-# PDF / DOCX / TXT Loaders
 pypdf
 python-docx
-docx2txt
-
-# HTTP & Utils
 requests
-python-dotenv
-typing-extensions
-tenacity
-filelock
-
-# Database
 pymongo
 pinecone-client
-
-# LangChain
+google-generativeai
+python-dotenv
 langchain
 langchain-community
 langchain-core
 langchain-google-genai
 langchain-pinecone
-
-# Google GenAI
-google-generativeai
-
-# Excel loader (lightweight)
-unstructured[excel]
+gunicorn
+uvloop
+pdfminer.six<20240703
+pillow-heif
+pytesseract
+pi_heif
+easyocr
+torch
+pdf2image
+unstructured_inference
+unstructured[all-docs]
 openpyxl
-pandas
-
-# PPTX parser (basic text extraction)
 python-pptx
-
-# Image support (no OCR)
 pillow
+pandas
+msoffcrypto-tool
+typing-extensions
+aiofiles
+tenacity
+filelock
+docx2txt
+httptools
