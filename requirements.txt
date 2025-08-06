@@ -1,34 +1,44 @@
+# API & Server
 fastapi
 uvicorn
+gunicorn
+uvloop
+httptools
+aiofiles
+
+# PDF / DOCX / TXT Loaders
 pypdf
 python-docx
+docx2txt
+
+# HTTP & Utils
 requests
+python-dotenv
+typing-extensions
+tenacity
+filelock
+
+# Database
 pymongo
 pinecone-client
-google-generativeai
-python-dotenv
+
+# LangChain
 langchain
 langchain-community
 langchain-core
 langchain-google-genai
 langchain-pinecone
-gunicorn
-uvloop
-pdfminer.six<20240703
-easyocr
-torch==2.2.2+cpu
--f https://download.pytorch.org/whl/torch_stable.html
-pdf2image
-unstructured_inference
+
+# Google GenAI
+google-generativeai
+
+# Excel loader (lightweight)
 unstructured[excel]
 openpyxl
-python-pptx
-pillow
 pandas
-msoffcrypto-tool
-typing-extensions
-aiofiles
-tenacity
-filelock
-docx2txt
-httptools
+
+# PPTX parser (basic text extraction)
+python-pptx
+
+# Image support (no OCR)
+pillow

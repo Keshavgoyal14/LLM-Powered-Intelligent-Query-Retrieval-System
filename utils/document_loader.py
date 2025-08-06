@@ -3,14 +3,11 @@ import os
 import tempfile
 import requests
 import zipfile
-import easyocr
 from langchain.schema import Document
 from langchain_community.document_loaders import (
     PyPDFLoader, Docx2txtLoader, TextLoader, UnstructuredExcelLoader
 )
-
-# Initialize EasyOCR reader
-reader = easyocr.Reader(['en'], gpu=False)
+from pptx import Presentation  # lightweight text extraction for pptx
 
 def resolve_aspx(url: str) -> str:
     parsed = urlparse(url)
@@ -22,30 +19,18 @@ def resolve_aspx(url: str) -> str:
             return real_url
     return url
 
-def extract_images_from_pptx(pptx_path):
-    """Extracts embedded images from PPTX file."""
-    images = []
-    with zipfile.ZipFile(pptx_path, 'r') as z:
-        for file in z.namelist():
-            if file.startswith("ppt/media/") and file.lower().endswith((".png", ".jpg", ".jpeg")):
-                img_data = z.read(file)
-                temp_img = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file)[1])
-                temp_img.write(img_data)
-                temp_img.close()
-                images.append(temp_img.name)
-    return images
-
-def pptx_images_with_ocr(pptx_path, url):
-    """Extract images from PPTX and run OCR on each."""
-    docs = []
-    for img_path in extract_images_from_pptx(pptx_path):
-        try:
-            text_results = reader.readtext(img_path, detail=0)
-            extracted_text = "\n".join(text_results).strip() or "[No readable text found]"
-            docs.append(Document(page_content=extracted_text, metadata={"source": url, "image_file": os.path.basename(img_path)}))
-        finally:
-            os.unlink(img_path)  # Remove temp image after processing
-    return docs
+def pptx_extract_text(pptx_path, url):
+    """Extract text from pptx shapes (no OCR)."""
+    text_content = []
+    prs = Presentation(pptx_path)
+    for slide in prs.slides:
+        for shape in slide.shapes:
+            if shape.has_text_frame:
+                text_content.append(shape.text)
+    combined_text = "\n".join(t.strip() for t in text_content if t.strip())
+    if not combined_text:
+        combined_text = "[No readable text found in pptx without OCR]"
+    return [Document(page_content=combined_text, metadata={"source": url})]
 
 def load_documents(url: str):
     print(f"Loading document from URL: {url}")
@@ -93,13 +78,11 @@ def load_documents(url: str):
         elif extension == ".txt":
             docs = TextLoader(temp_path).load()
         elif extension == ".pptx":
-            docs = pptx_images_with_ocr(temp_path, url)
+            docs = pptx_extract_text(temp_path, url)
         elif extension in [".xlsx", ".xls"]:
             docs = UnstructuredExcelLoader(temp_path).load()
         elif extension in [".png", ".jpg", ".jpeg"]:
-            text_results = reader.readtext(temp_path, detail=0)
-            extracted_text = "\n".join(text_results).strip() or "[No readable text found in image]"
-            docs = [Document(page_content=extracted_text, metadata={"source": url})]
+            docs = [Document(page_content="[Image processing disabled]", metadata={"source": url})]
         else:
             docs = []
     finally:
