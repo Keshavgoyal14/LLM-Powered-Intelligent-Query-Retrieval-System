@@ -80,6 +80,14 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 ---
 
+## API Documentation
+
+You can explore and test the API using the interactive Swagger UI:
+
+👉 **[https://hackerx-finbotapi.onrender.com/docs](https://hackerx-finbotapi.onrender.com/docs)**
+
+---
+
 ## File Support
 
 | File Type | Loader/Method                | Notes                                 |
