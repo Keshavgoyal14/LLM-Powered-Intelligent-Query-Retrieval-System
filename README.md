@@ -101,9 +101,9 @@ GEMINI_API_KEY=your_gemini_api_key_here
 {
   "documents": "https://example.com/document.pdf",
   "questions": [
-    "What are the key terms and conditions?",
-    "What is the scope of coverage?",
-    "What are the limitations and exclusions?"
+    "Who is eligible for this policy?",
+    "How can a claim be filed?",
+    "What documents are required for reimbursement?"
   ]
 }
 ```
@@ -113,9 +113,9 @@ GEMINI_API_KEY=your_gemini_api_key_here
 ```json
 {
   "answers": [
-    "The key terms include a 30-day grace period and coverage up to $100,000.",
-    "The scope covers medical expenses, hospitalization, and outpatient care.",
-    "Limitations include pre-existing conditions and cosmetic procedures."
+    "Eligibility includes individuals aged 18-65 with no pre-existing critical illnesses.",
+    "A claim can be filed online through the portal or by contacting customer support.",
+    "Required documents for reimbursement include the claim form, hospital bills, and identity proof."
   ]
 }
 ```
@@ -128,7 +128,7 @@ curl -X POST "https://your-api-url.com/api/v1/hackrx/run" \
   -H "Content-Type: application/json" \
   -d '{
     "documents": "https://example.com/document.pdf",
-    "questions": ["What are the main terms and conditions?"]
+    "questions": ["Who is eligible for this policy?"]
   }'
 ```
 
