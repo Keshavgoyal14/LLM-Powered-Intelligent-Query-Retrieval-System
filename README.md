@@ -1,4 +1,4 @@
-# Finbot API
+# LLM-Powered Intelligent Query-Retrieval System
 
 A FastAPI backend for intelligent document ingestion, search, Q&A, and content moderation using LangChain, Gemini, OCR, Hugging Face moderation, and vector search.  
 Supports PDF, DOCX, TXT, PPTX (with OCR for embedded images), Excel, and image files.
@@ -93,6 +93,47 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 ---
 
+## API Usage
+
+### Request Format
+
+```json
+{
+  "documents": "https://example.com/document.pdf",
+  "questions": [
+    "What are the key terms and conditions?",
+    "What is the scope of coverage?",
+    "What are the limitations and exclusions?"
+  ]
+}
+```
+
+### Response Format
+
+```json
+{
+  "answers": [
+    "The key terms include a 30-day grace period and coverage up to $100,000.",
+    "The scope covers medical expenses, hospitalization, and outpatient care.",
+    "Limitations include pre-existing conditions and cosmetic procedures."
+  ]
+}
+```
+
+### Example with curl
+
+```sh
+curl -X POST "https://your-api-url.com/api/v1/hackrx/run" \
+  -H "Authorization: Bearer your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "documents": "https://example.com/document.pdf",
+    "questions": ["What are the main terms and conditions?"]
+  }'
+```
+
+---
+
 ## API Documentation
 
 You can explore and test the API using the interactive Swagger UI:
@@ -137,7 +178,7 @@ You can explore and test the API using the interactive Swagger UI:
 - All temp files are cleaned up after processing.
 - PPTX text extraction is limited to images embedded in slides (not text boxes or tables).
 - Hugging Face moderation requires a valid API key and internet access.
-- **Finbot API is optimized for insurance, legal, HR, and contracts domains.**
+- **This system is optimized for insurance, legal, HR, and contracts domains.**
 
 ---
 
