@@ -5,6 +5,19 @@ Supports PDF, DOCX, TXT, PPTX (with OCR for embedded images), Excel, and image f
 
 ---
 
+## Tech Stack
+
+- **FastAPI** – High-performance Python web framework for APIs
+- **LangChain** – Document loaders, chunking, and vector search
+- **Gemini (Google Generative AI)** – LLM-powered question answering
+- **EasyOCR** – Optical Character Recognition for images and PPTX-embedded images
+- **Hugging Face Moderation API** – Content moderation for questions and document chunks
+- **Pinecone** – Vector database for semantic search (if enabled)
+- **Tesseract-OCR** – Backend OCR engine for EasyOCR
+- **Python** – Core programming language
+
+---
+
 ## Features
 
 - **Domain-Specific Q&A:** Optimized for the following domains:
