@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 021107100370.dkr.ecr.us-east-1.amazonaws.com/finbot-api)
+      - IMAGE_TAG=latest
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t 021107100370.dkr.ecr.us-east-1.amazonaws.com/finbot-api:$IMAGE_TAG .
+  post_build:
+    commands:
+      - echo Pushing the Docker image to ECR...
+      - docker push 021107100370.dkr.ecr.us-east-1.amazonaws.com/finbot-api:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"finbot-api","imageUri":"%s"}]' 021107100370.dkr.ecr.us-east-1.amazonaws.com/finbot-api:$IMAGE_TAG > imagedefinitions.json
+
+artifacts:
+  files: imagedefinitions.json
